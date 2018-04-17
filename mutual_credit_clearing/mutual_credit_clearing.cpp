@@ -15,7 +15,7 @@ void mutual_credit_clearing::create(account_name issuer, asset maximum_supply) {
     auto sym = maximum_supply.symbol;
     eosio_assert(sym.is_valid(), "invalid symbol name");
 
-    _stats stats_table( _self, sym.name() );
+    stats stats_table( _self, sym.name() );
     auto existing = stats_table.find( sym.name() );
     eosio_assert( existing == stats_table.end(), "token with symbol already exists" );
 
@@ -28,5 +28,49 @@ void mutual_credit_clearing::create(account_name issuer, asset maximum_supply) {
     print("created! ");
 }
 
+void mutual_credit_clearing::issue( account_name to, asset quantity, string memo ) {
 
-EOSIO_ABI(mutual_credit_clearing, (hi)(bye)(create))
+    print("hello issuer yahoo >>", memo.c_str());
+
+//    auto sym = quantity.symbol;
+//
+//    stats stats_table( _self, sym.name() );
+//    const auto& st = stats_table.get( sym.name() );
+//
+//    require_auth( st.issuer ); // only issuer can issue
+//
+//    print("issuer >>>", name{st.issuer});
+//
+//    eosio_assert( quantity.is_valid(), "invalid quantity" );
+//    eosio_assert( quantity.amount > 0, "must issue positive quantity" );
+//
+//    stats_table.modify( st, 0, [&](auto& s) {
+//       s.supply.amount += quantity.amount;
+//    });
+//
+//    add_balance(st.issuer, quantity, st, st.issuer);
+
+
+}
+
+void mutual_credit_clearing::add_balance(account_name owner,
+                                         asset value,
+                                         const stat& st,
+                                         account_name payer) {
+    accounts to_acc(_self, owner);
+
+    auto to = to_acc.find(value.symbol);
+
+    if (to == to_acc.end()) {
+        to_acc.emplace(payer, [&](auto& a) {
+            a.balance = value;
+        });
+    } else {
+        to_acc.modify( to, 0, [&](auto& a) {
+           a.balance.amount += value.amount;
+        });
+    }
+}
+
+
+EOSIO_ABI(mutual_credit_clearing, (hi)(bye)(create)(issue))

@@ -13,15 +13,9 @@ class mutual_credit_clearing : contract {
 
         mutual_credit_clearing(account_name self) : contract(self) {}
 
-        void create(account_name issuer, asset maximum_supply);
-
-        void issue(account_name to, asset quantity, string memo);
+        void create(account_name issuer, asset min_balance);
 
         void transfer(account_name from, account_name to, asset quantity, string memo);
-
-        // tests
-        void hi(account_name user);
-        void bye(string msg);
 
     private:
 
@@ -29,11 +23,10 @@ class mutual_credit_clearing : contract {
 
         struct stats {
             asset supply;
-            asset max_supply;
+            asset min_balance;
             account_name issuer;
 
             uint64_t primary_key() const { return supply.symbol.name(); }
-            EOSLIB_SERIALIZE(stats, (supply)(max_supply)(issuer))
         };
 
         typedef eosio::multi_index<N(stats), stats> _stats;

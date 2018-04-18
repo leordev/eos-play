@@ -26,6 +26,15 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="mutual_credit_clearing.abi" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.abi">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="915">
+              <caret line="61" column="5" lean-forward="true" selection-start-line="61" selection-start-column="5" selection-end-line="61" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
@@ -38,8 +47,8 @@
       <file leaf-file-name="mutual_credit_clearing.hpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.hpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="765">
-              <caret line="51" column="76" selection-start-line="51" selection-start-column="76" selection-end-line="51" selection-end-column="76" />
+            <state relative-caret-position="135">
+              <caret line="9" column="29" lean-forward="true" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
             </state>
           </provider>
         </entry>
@@ -47,17 +56,8 @@
       <file leaf-file-name="mutual_credit_clearing.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="312">
-              <caret line="61" column="46" lean-forward="true" selection-start-line="61" selection-start-column="46" selection-end-line="61" selection-end-column="46" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="mutual_credit_clearing.abi" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.abi">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="800">
-              <caret line="85" column="23" selection-start-line="85" selection-start-column="23" selection-end-line="85" selection-end-column="23" />
+            <state relative-caret-position="1173">
+              <caret line="83" column="8" selection-start-line="83" selection-start-column="8" selection-end-line="83" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -168,7 +168,7 @@
       <workItem from="1523628231271" duration="1909000" />
       <workItem from="1523641343988" duration="1253000" />
       <workItem from="1523917001141" duration="7588000" />
-      <workItem from="1523963151294" duration="10334000" />
+      <workItem from="1523963151294" duration="13188000" />
     </task>
     <task id="LOCAL-00001" summary="issue method">
       <created>1523966537729</created>
@@ -177,11 +177,25 @@
       <option name="project" value="LOCAL" />
       <updated>1523966537729</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="transfer method with sub_balance">
+      <created>1524011670689</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1524011670689</updated>
+    </task>
+    <task id="LOCAL-00003" summary="fix token creation">
+      <created>1524013038101</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1524013038101</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="21084000" />
+    <option name="totallyTimeSpent" value="23938000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="879" height="1417" extended-state="0" />
@@ -215,7 +229,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="issue method" />
-    <option name="LAST_COMMIT_MESSAGE" value="issue method" />
+    <MESSAGE value="transfer method with sub_balance" />
+    <MESSAGE value="fix token creation" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix token creation" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/CMakeLists.txt">
@@ -311,24 +327,24 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.hpp">
+    <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.abi">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="51" column="76" selection-start-line="51" selection-start-column="76" selection-end-line="51" selection-end-column="76" />
+        <state relative-caret-position="915">
+          <caret line="61" column="5" lean-forward="true" selection-start-line="61" selection-start-column="5" selection-end-line="61" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.abi">
+    <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.hpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="800">
-          <caret line="85" column="23" selection-start-line="85" selection-start-column="23" selection-end-line="85" selection-end-column="23" />
+        <state relative-caret-position="135">
+          <caret line="9" column="29" lean-forward="true" selection-start-line="9" selection-start-column="29" selection-end-line="9" selection-end-column="29" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/mutual_credit_clearing/mutual_credit_clearing.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="312">
-          <caret line="61" column="46" lean-forward="true" selection-start-line="61" selection-start-column="46" selection-end-line="61" selection-end-column="46" />
+        <state relative-caret-position="1173">
+          <caret line="83" column="8" selection-start-line="83" selection-start-column="8" selection-end-line="83" selection-end-column="8" />
         </state>
       </provider>
     </entry>

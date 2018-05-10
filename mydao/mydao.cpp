@@ -1,6 +1,7 @@
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/singleton.hpp>
+#include <eosiolib/multi_index.hpp>
 #include <boost/container/flat_map.hpp>
 
 using namespace eosio;
@@ -48,25 +49,40 @@ public:
 
     }
 
-    void addmember(account_name new_user, uuid dao_id, account_name inviter) {
-        require_auth(inviter);
+    void addmember(account_name new_user, uuid dao_id, account_name owner) {
+        require_auth(owner);
 
-        auto const &dao = daos.find(dao_id);
-        eosio_assert(dao != daos.end(), "invalid dao");
+        auto dao = require_dao(dao_id);
 
         // validate member
-        const auto &itr_member = find(dao->members.begin(), dao->members.end(), inviter);
-        eosio_assert(itr_member != dao->members.end(), "unknown inviter");
+
+        // validate owner
+        eosio_assert(dao->owner == owner, "only the owner can add members");
 
         // check if new user already exists
         const auto &itr_new_member = find(dao->members.begin(), dao->members.end(), new_user);
         eosio_assert(itr_new_member == dao->members.end(), "new user already in dao");
 
-        require_recipient(inviter);
-        require_recipient(new_user);
-
-        daos.modify(dao, inviter, [&](auto &r) {
+        daos.modify(dao, owner, [&](auto &r) {
             r.members.push_back(new_user);
+        });
+    }
+
+    void delmember(account_name member, uuid dao_id, account_name owner) {
+        require_auth(owner);
+
+        auto dao = require_dao(dao_id);
+
+        // validate owner
+        eosio_assert(dao->owner == owner, "only the owner can remove members");
+
+        daos.modify(dao, owner, [&](auto &r) {
+
+            // check if member exists and remove it
+            const auto &itr_member = find(r.members.begin(), r.members.end(), member);
+            eosio_assert(itr_member != r.members.end(), "user is not a dao member");
+
+            r.members.erase(itr_member);
         });
     }
 
@@ -74,8 +90,7 @@ public:
                     string description, uint64_t min_execution_date) {
         require_auth(author);
 
-        auto dao = daos.find(dao_id);
-        eosio_assert(dao != daos.end(), "invalid dao");
+        auto dao = require_dao(dao_id);
 
         // validate member
         auto itr_member = find(dao->members.begin(), dao->members.end(), author);
@@ -135,6 +150,12 @@ private:
         return lid;
     }
 
+    tb_dao::const_iterator require_dao(uuid dao_id) {
+        auto dao = daos.find(dao_id);
+        eosio_assert(dao != daos.end(), "invalid dao");
+        return dao;
+    }
+
 };
 
-EOSIO_ABI(mydao, (hi)(createdao)(createprop)(addmember))
+EOSIO_ABI(mydao, (hi)(createdao)(createprop)(addmember)(delmember))

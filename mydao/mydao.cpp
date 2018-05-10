@@ -1,12 +1,13 @@
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/singleton.hpp>
-#include <set>
+#include <boost/container/flat_map.hpp>
 
 using namespace eosio;
 
 using std::string;
 using std::vector;
+using std::map;
 
 using boost::container::flat_map;
 
@@ -24,7 +25,7 @@ public:
             :eosio::contract(self),
              daos(_self,_self),
              last_id(_self, _self)
-            {}
+    {}
 
     void hi(account_name user) {
         require_recipient(user);
@@ -51,13 +52,21 @@ public:
         require_auth(inviter);
 
         auto const &dao = daos.find(dao_id);
+        eosio_assert(dao != daos.end(), "invalid dao");
 
         // validate member
-        const auto &itr_member = dao->members.find(inviter);
-        eosio_assert(itr_member != dao->members.end(), "inviter not in dao");
+        const auto &itr_member = find(dao->members.begin(), dao->members.end(), inviter);
+        eosio_assert(itr_member != dao->members.end(), "unknown inviter");
+
+        // check if new user already exists
+        const auto &itr_new_member = find(dao->members.begin(), dao->members.end(), new_user);
+        eosio_assert(itr_new_member == dao->members.end(), "new user already in dao");
+
+        require_recipient(inviter);
+        require_recipient(new_user);
 
         daos.modify(dao, inviter, [&](auto &r) {
-            r.members.insert(new_user);
+            r.members.push_back(new_user);
         });
     }
 
@@ -69,7 +78,7 @@ public:
         eosio_assert(dao != daos.end(), "invalid dao");
 
         // validate member
-        auto itr_member = dao->members.find(author);
+        auto itr_member = find(dao->members.begin(), dao->members.end(), author);
         eosio_assert(itr_member != dao->members.end(), "author not in dao");
 
         daos.modify(dao, author, [&](auto &r) {
@@ -95,7 +104,7 @@ private:
         uint8_t current_result;
         string proposal_hash;
 
-        flat_map<account_name, vote> votes;
+        map<account_name, vote> votes;
     };
 
     // @abi table dao i64
@@ -106,7 +115,7 @@ private:
         uint16_t debating_period_minutes;
         uint16_t majority_margin;
 
-        std::set<account_name> members;
+        std::vector<account_name> members;
 
         flat_map<uuid, proposal> proposals;
 

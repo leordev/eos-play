@@ -9,14 +9,12 @@ using std::vector;
 
 using boost::container::flat_map;
 
+typedef uint64_t uuid;
+
 /**
  * We are playing with contracts from ethereum
- * this example has horrible performance compared to
- * default eosio.token because we are utilizing vector
- * just to simulate what eth has in their contracts
- * The correct structure would be create another table
- * for balance and persist the token on the account
- * owner scope
+ * to compare how is a solidity implementation
+ * vs awesome eos :)
  * @author Leo Ribeiro
  */
 class mydao : public eosio::contract {
@@ -25,7 +23,7 @@ public:
             :eosio::contract(self),
              daos(_self,_self),
              last_id(_self, _self)
-            {}
+    {}
 
     void hi(account_name user) {
         require_recipient(user);
@@ -48,9 +46,23 @@ public:
 
     }
 
-private:
+    void createprop(uuid dao_id, account_name author, account_name recipient, asset amount,
+                    string description, uint64_t min_execution_date) {
+        require_auth(author);
 
-    typedef uint64_t uuid;
+        auto dao = daos.find(dao_id);
+
+        // validate member
+        const auto itr_member = find(begin(dao->members), end(dao->members), author);
+        eosio_assert(itr_member != end(dao->members), "author not in dao");
+
+        daos.modify(dao, author, [&](auto &r) {
+            proposal p{recipient, amount, description, min_execution_date, false, false, 0, "xxxx"};
+            r.proposals.emplace(next_id(), p);
+        });
+    }
+
+private:
 
     struct vote {
         bool in_support;
@@ -64,7 +76,6 @@ private:
         uint64_t min_execution_date;
         bool executed;
         bool proposal_passed;
-        uint8_t number_of_votes;
         uint8_t current_result;
         string proposal_hash;
 
@@ -101,4 +112,4 @@ private:
 
 };
 
-EOSIO_ABI(mydao, (hi)(createdao))
+EOSIO_ABI(mydao, (hi)(createdao)(createprop))

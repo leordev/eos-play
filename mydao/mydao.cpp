@@ -1,6 +1,7 @@
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
 #include <eosiolib/singleton.hpp>
+#include <set>
 
 using namespace eosio;
 
@@ -23,7 +24,7 @@ public:
             :eosio::contract(self),
              daos(_self,_self),
              last_id(_self, _self)
-    {}
+            {}
 
     void hi(account_name user) {
         require_recipient(user);
@@ -41,9 +42,23 @@ public:
             r.min_quorum = min_quorum;
             r.debating_period_minutes = debating_period_minutes;
             r.majority_margin = majority_margin;
-            r.members = {{owner}};
+            r.members = {owner};
         });
 
+    }
+
+    void addmember(account_name new_user, uuid dao_id, account_name inviter) {
+        require_auth(inviter);
+
+        auto const &dao = daos.find(dao_id);
+
+        // validate member
+        const auto &itr_member = dao->members.find(inviter);
+        eosio_assert(itr_member != dao->members.end(), "inviter not in dao");
+
+        daos.modify(dao, inviter, [&](auto &r) {
+            r.members.insert(new_user);
+        });
     }
 
     void createprop(uuid dao_id, account_name author, account_name recipient, asset amount,
@@ -51,10 +66,11 @@ public:
         require_auth(author);
 
         auto dao = daos.find(dao_id);
+        eosio_assert(dao != daos.end(), "invalid dao");
 
         // validate member
-        const auto itr_member = find(begin(dao->members), end(dao->members), author);
-        eosio_assert(itr_member != end(dao->members), "author not in dao");
+        auto itr_member = dao->members.find(author);
+        eosio_assert(itr_member != dao->members.end(), "author not in dao");
 
         daos.modify(dao, author, [&](auto &r) {
             proposal p{recipient, amount, description, min_execution_date, false, false, 0, "xxxx"};
@@ -90,7 +106,7 @@ private:
         uint16_t debating_period_minutes;
         uint16_t majority_margin;
 
-        vector<account_name> members;
+        std::set<account_name> members;
 
         flat_map<uuid, proposal> proposals;
 
@@ -112,4 +128,4 @@ private:
 
 };
 
-EOSIO_ABI(mydao, (hi)(createdao)(createprop))
+EOSIO_ABI(mydao, (hi)(createdao)(createprop)(addmember))

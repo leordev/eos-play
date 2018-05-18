@@ -57,12 +57,10 @@ public:
 
         // Pay for Pet Creation Fee
         if (pc.creation_fee > asset{}) {
-
-            print(pc.creation_fee);
-
-            action(permission_level{ owner, N(active) },
-                   N(eosio.token), N(transfer),
-                   std::make_tuple(owner, _self, pc.creation_fee, "PET - Creation Fee")
+            action(
+                permission_level{ owner, N(active) },
+                N(eosio.token), N(transfer),
+                std::make_tuple(owner, _self, pc.creation_fee, std::string("PET - Creation Fee"))
             ).send();
         }
 

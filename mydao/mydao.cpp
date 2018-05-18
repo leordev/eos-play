@@ -49,12 +49,43 @@ public:
 
     }
 
-    void addmember(account_name new_user, uuid dao_id, account_name owner) {
+    void changeowner(uuid dao_id, account_name new_owner, account_name owner) {
         require_auth(owner);
 
         auto dao = require_dao(dao_id);
 
-        // validate member
+        // validate owner
+        eosio_assert(dao->owner == owner, "only the owner can transfer the ownership");
+
+        require_recipient(new_owner);
+
+        daos.modify(dao, owner, [&](auto &r) {
+           r.owner = new_owner;
+        });
+    }
+
+    void changevoting(uuid dao_id, uint8_t min_quorum, uint16_t debating_period_minutes,
+                      uint8_t majority_margin, account_name owner) {
+        require_auth(owner);
+
+        auto dao = require_dao(dao_id);
+
+        // validate owner
+        eosio_assert(dao->owner == owner, "only the owner can change the voting rules");
+
+        require_recipient(owner);
+
+        daos.modify(dao, owner, [&](auto &r) {
+            r.min_quorum = min_quorum;
+            r.debating_period_minutes = debating_period_minutes;
+            r.majority_margin = majority_margin;
+        });
+    }
+
+    void addmember(uuid dao_id, account_name new_user, account_name owner) {
+        require_auth(owner);
+
+        auto dao = require_dao(dao_id);
 
         // validate owner
         eosio_assert(dao->owner == owner, "only the owner can add members");
@@ -63,18 +94,22 @@ public:
         const auto &itr_new_member = find(dao->members.begin(), dao->members.end(), new_user);
         eosio_assert(itr_new_member == dao->members.end(), "new user already in dao");
 
+        require_recipient(new_user);
+
         daos.modify(dao, owner, [&](auto &r) {
             r.members.push_back(new_user);
         });
     }
 
-    void delmember(account_name member, uuid dao_id, account_name owner) {
+    void delmember(uuid dao_id, account_name member, account_name owner) {
         require_auth(owner);
 
         auto dao = require_dao(dao_id);
 
         // validate owner
         eosio_assert(dao->owner == owner, "only the owner can remove members");
+
+        require_recipient(member);
 
         daos.modify(dao, owner, [&](auto &r) {
 
@@ -86,7 +121,7 @@ public:
         });
     }
 
-    void createprop(uuid dao_id, account_name author, account_name recipient, asset amount,
+    void newproposal(uuid dao_id, account_name author, account_name recipient, asset amount,
                     string description, uint64_t min_execution_date) {
         require_auth(author);
 
@@ -94,10 +129,10 @@ public:
 
         // validate member
         auto itr_member = find(dao->members.begin(), dao->members.end(), author);
-        eosio_assert(itr_member != dao->members.end(), "author not in dao");
+        eosio_assert(itr_member != dao->members.end(), "proposal author not in dao");
 
         daos.modify(dao, author, [&](auto &r) {
-            proposal p{recipient, amount, description, min_execution_date, false, false, 0, "xxxx"};
+            proposal p{recipient, amount, description, min_execution_date, false, false, 0};
             r.proposals.emplace(next_id(), p);
         });
     }
@@ -158,4 +193,4 @@ private:
 
 };
 
-EOSIO_ABI(mydao, (hi)(createdao)(createprop)(addmember)(delmember))
+EOSIO_ABI(mydao, (hi)(createdao)(newproposal)(addmember)(delmember)(changeowner)(changevoting))

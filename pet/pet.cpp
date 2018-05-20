@@ -1,5 +1,9 @@
 /**
- * Pet Smart Contract
+ * Pet-Tamagotchi-Alike Smart Contract
+ *
+ * The idea is to copy kind of the original tamagotchi to the chain :)
+ *
+ *
  * @author Leo Ribeiro
  */
 #include <eosiolib/asset.hpp>
@@ -23,7 +27,7 @@ const uint8_t PET_TYPES = 5;
 const uint32_t DAY = 86400;
 const uint32_t TWENTY_HOURS = 72000;
 const uint8_t  MAX_HEALTH = 100;
-const uint32_t HUNGER_TO_ZERO = 600; // DAY
+const uint32_t HUNGER_TO_ZERO = 120; // DAY
 const uint8_t  MAX_HUNGER_POINTS = 100;
 const uint8_t  HUNGER_HP_MODIFIER = 1;
 const uint8_t  HUNGER_FEED_POINTS = 33;
@@ -110,6 +114,7 @@ public:
 
         pets.modify(itr_pet, 0, [&](auto &r) {
             r.health = pet.health;
+            r.death_at = pet.death_at;
             r.hunger = pet.hunger;
             r.awake = pet.awake;
             r.happiness = pet.happiness;
@@ -138,6 +143,7 @@ public:
 
         pets.modify(itr_pet, 0, [&](auto &r) {
             r.health = pet.health;
+            r.death_at = pet.death_at;
             r.hunger = pet.hunger;
             r.awake = pet.awake;
             r.happiness = pet.happiness;
@@ -245,10 +251,13 @@ private:
 
         uint8_t effect_hp_hunger = _calc_hunger_hp(pet, current_time);
 
-        pet.health = MAX_HEALTH - effect_hp_hunger;
+        int8_t hp = MAX_HEALTH - effect_hp_hunger;
 
-        if (pet.health <= 0) {
-            pet.death_at = now();
+        if (hp <= 0) {
+            pet.health = 0;
+            pet.death_at = current_time;
+        } else {
+            pet.health = hp;
         }
     }
 
@@ -259,10 +268,10 @@ private:
 
         // calculates the effective hunger on hp, if pet hunger is 0
         uint8_t effect_hp_hunger = 0;
-        if (hungry_points < pet.hunger) {
-            pet.hunger -= hungry_points;
+        if (hungry_points < MAX_HUNGER_POINTS) {
+            pet.hunger = MAX_HUNGER_POINTS - hungry_points;
         } else {
-            effect_hp_hunger = (uint8_t) (hungry_points - (pet.hunger / HUNGER_HP_MODIFIER));
+            effect_hp_hunger = (uint8_t) ((hungry_points - MAX_HUNGER_POINTS) / HUNGER_HP_MODIFIER);
             pet.hunger = 0;
         }
 

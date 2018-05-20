@@ -25,9 +25,11 @@ typedef uint64_t uuid;
 // There's five pet types
 const uint8_t PET_TYPES = 5;
 const uint32_t DAY = 86400;
+const uint32_t HOUR = 3600;
 const uint32_t TWENTY_HOURS = 72000;
 const uint8_t  MAX_HEALTH = 100;
 const uint32_t HUNGER_TO_ZERO = DAY;
+const uint32_t MIN_HUNGER_INTERVAL = 3 * HOUR;
 const uint8_t  MAX_HUNGER_POINTS = 100;
 const uint8_t  HUNGER_HP_MODIFIER = 1;
 const uint32_t HAPPINESS_TO_ZERO = 2 * DAY;
@@ -139,10 +141,19 @@ public:
             r.happiness = pet.happiness;
             r.clean = pet.clean;
 
-            if (r.health > 0) {
+            uint32_t current_time = now();
+            bool can_eat = (current_time - pet.last_fed_at) > MIN_HUNGER_INTERVAL;
+
+            bool is_alive = r.health > 0;
+
+            if (can_eat && is_alive) {
                 r.health = MAX_HEALTH;
                 r.hunger = MAX_HUNGER_POINTS;
                 r.last_fed_at = now();
+            } else if (!can_eat) {
+                print("I110|>Not hungry");
+            } else if(!is_alive) {
+                print("I199|>Deads don't feed");
             }
         });
     }

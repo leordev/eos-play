@@ -27,30 +27,20 @@ const uint8_t PET_TYPES = 5;
 const uint32_t DAY = 86400;
 const uint32_t TWENTY_HOURS = 72000;
 const uint8_t  MAX_HEALTH = 100;
-const uint32_t HUNGER_TO_ZERO = 120; // DAY
+const uint32_t HUNGER_TO_ZERO = DAY;
 const uint8_t  MAX_HUNGER_POINTS = 100;
 const uint8_t  HUNGER_HP_MODIFIER = 1;
-const uint8_t  HUNGER_FEED_POINTS = 33;
 const uint32_t HAPPINESS_TO_ZERO = 2 * DAY;
 const uint8_t  MAX_HAPPINESS_POINTS = 100;
 const uint8_t  HAPPINESS_HP_MODIFIER = 2;
-const uint8_t  HAPPINESS_PLAY_POINTS = 33;
 const uint32_t AWAKE_TO_ZERO = TWENTY_HOURS;
 const uint8_t  MAX_AWAKE_POINTS = 100;
-const uint8_t  AWAKE_BED_POINTS = 33;
 const uint8_t  AWAKE_HP_MODIFIER = 2;
 const uint32_t SHOWER_TO_ZERO = DAY;
 const uint8_t  MAX_CLEAN_POINTS = 100;
 const uint8_t  CLEAN_HP_MODIFIER = 3;
-const uint8_t  CLEAN_SHOWER_POINTS = 33;
 
-uint128_t combine_ids(uint64_t const& x, uint64_t const& y) {
-    uint128_t times = 1;
-    while (times <= y)
-        times *= 10;
 
-    return (x * times) + y;
-}
 
 
 /* ****************************************** */
@@ -150,8 +140,8 @@ public:
             r.clean = pet.clean;
 
             if (r.health > 0) {
-                r.hunger = (pet.hunger + HUNGER_FEED_POINTS) > MAX_HUNGER_POINTS ?
-                        MAX_HUNGER_POINTS : (pet.hunger + HUNGER_FEED_POINTS);
+                r.health = MAX_HEALTH;
+                r.hunger = MAX_HUNGER_POINTS;
                 r.last_fed_at = now();
             }
         });
@@ -185,14 +175,14 @@ private:
         uint8_t type;
         uint32_t created_at;
         uint32_t death_at = 0;
-        uint8_t health = 100;
-        uint8_t hunger = 70;
+        uint8_t health = MAX_HEALTH;
+        uint8_t hunger = MAX_HUNGER_POINTS;
         uint32_t last_fed_at;
-        uint8_t awake = 100;
+        uint8_t awake = MAX_AWAKE_POINTS;
         uint32_t last_bed_at;
-        uint8_t happiness = 70;
+        uint8_t happiness = MAX_HAPPINESS_POINTS;
         uint32_t last_play_at;
-        uint8_t clean = 100;
+        uint8_t clean = MAX_CLEAN_POINTS;
         uint32_t last_shower_at;
 
         uint64_t primary_key() const { return id; }
@@ -245,7 +235,7 @@ private:
 
     void _update(st_pets &pet) {
 
-        eosio_assert(pet.health > 0 || pet.death_at > 0, "E099|>Pet is dead");
+        eosio_assert(pet.health > 0 && pet.death_at == 0, "E099|>Pet is dead");
 
         uint32_t current_time = now();
 

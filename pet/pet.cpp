@@ -4,6 +4,7 @@
  */
 #include <eosiolib/asset.hpp>
 #include <eosiolib/eosio.hpp>
+#include <eosiolib/transaction.hpp>
 #include <eosiolib/singleton.hpp>
 
 using namespace eosio;
@@ -73,24 +74,29 @@ public:
             pet.type = (_hash_str(pet_name) + pet.created_at + pet.id + owner) % PET_TYPES;
 
             r = pet;
+
+            // testing deferred
+            transaction out{};
+            out.actions.emplace_back(permission_level{_self, N(active)}, N(pet), N(feedpet), std::make_tuple(pet.id));
+            out.delay_sec = 10;
+            out.send(pet.id, _self);
         });
-
     }
 
-    void feedpet() {
-        eosio_assert(false, "lazy developer");
+    void feedpet(uuid pet_id) {
+        print("feed lazy developer");
     }
 
-    void bedpet() {
-        eosio_assert(false, "lazy developer");
+    void bedpet(uuid pet_id) {
+        print("bed lazy developer");
     }
 
-    void playpet() {
-        eosio_assert(false, "lazy developer");
+    void playpet(uuid pet_id) {
+        print("play lazy developer");
     }
 
-    void washpet() {
-        eosio_assert(false, "lazy developer");
+    void washpet(uuid pet_id) {
+        print("wash lazy developer");
     }
 
 
@@ -170,4 +176,4 @@ private:
 
 };
 
-EOSIO_ABI(pet, (createpet))
+EOSIO_ABI(pet, (createpet)(feedpet)(bedpet)(playpet)(washpet))

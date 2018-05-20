@@ -21,7 +21,13 @@ typedef uint64_t uuid;
 // There's five pet types
 const uint8_t PET_TYPES = 5;
 
+uint128_t combine_ids(uint64_t const& x, uint64_t const& y) {
+    uint128_t times = 1;
+    while (times <= y)
+        times *= 10;
 
+    return (x * times) + y;
+}
 
 
 /* ****************************************** */
@@ -77,13 +83,30 @@ public:
 
             // testing deferred
             transaction out{};
-            out.actions.emplace_back(permission_level{_self, N(active)}, N(pet), N(feedpet), std::make_tuple(pet.id));
-            out.delay_sec = 10;
+            out.actions.emplace_back(permission_level{_self, N(active)}, N(pet), N(updatepet), std::make_tuple(pet.id, 1));
+            out.delay_sec = 1;
             out.send(pet.id, _self);
         });
     }
 
-    void feedpet(uuid pet_id) {
+    void updatepet(uuid pet_id, uint32_t iteration) {
+        require_auth(_self);
+        print(pet_id, "|", iteration, ": updating pet ");
+
+//        int block_num = tapos_block_num();
+//        print("\ntapos_block_num = ", block_num);
+
+        // testing deferred recursive
+        transaction out{};
+        out.actions.emplace_back(
+                permission_level{_self, N(active)},
+                N(pet), N(updatepet),
+                std::make_tuple(pet_id, iteration+1));
+        out.delay_sec = 1;
+        out.send(combine_ids(pet_id, uint64_t{iteration}), _self);
+    }
+
+    void feedpet(uuid pet_id, uint32_t iteration) {
         print("feed lazy developer");
     }
 
@@ -176,4 +199,4 @@ private:
 
 };
 
-EOSIO_ABI(pet, (createpet)(feedpet)(bedpet)(playpet)(washpet))
+EOSIO_ABI(pet, (createpet)(updatepet)(feedpet)(bedpet)(playpet)(washpet))

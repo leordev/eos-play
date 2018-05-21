@@ -1,7 +1,7 @@
 /**
  * Pet-Tamagotchi-Alike Smart Contract
  *
- * The idea is to copy kind of the original tamagotchi to the chain :)
+ * The idea is to copy the original tamagotchi to the chain :)
  *
  *
  * @author Leo Ribeiro
@@ -22,23 +22,24 @@ using std::hash;
 
 typedef uint64_t uuid;
 
-// There's five pet types
-const uint8_t PET_TYPES = 5;
+const uint8_t PET_TYPES = 109;
 const uint32_t DAY = 86400;
 const uint32_t HOUR = 3600;
-const uint32_t TWENTY_HOURS = 72000;
 const uint8_t  MAX_HEALTH = 100;
-const uint32_t HUNGER_TO_ZERO = DAY;
+const uint32_t HUNGER_TO_ZERO = 10 * HOUR;
 const uint32_t MIN_HUNGER_INTERVAL = 3 * HOUR;
 const uint8_t  MAX_HUNGER_POINTS = 100;
 const uint8_t  HUNGER_HP_MODIFIER = 1;
-const uint32_t HAPPINESS_TO_ZERO = 2 * DAY;
+const uint32_t HAPPINESS_TO_ZERO = 20 * HOUR;
 const uint8_t  MAX_HAPPINESS_POINTS = 100;
 const uint8_t  HAPPINESS_HP_MODIFIER = 2;
-const uint32_t AWAKE_TO_ZERO = TWENTY_HOURS;
+const uint32_t AWAKE_TO_ZERO = 20 * HOUR;
+const uint32_t SLEEP_TO_ZERO = 8 * HOUR;
+const uint32_t MIN_AWAKE_INTERVAL = 8 * HOUR;
+const uint32_t MIN_SLEEP_PERIOD = 4 * HOUR;
 const uint8_t  MAX_AWAKE_POINTS = 100;
 const uint8_t  AWAKE_HP_MODIFIER = 2;
-const uint32_t SHOWER_TO_ZERO = DAY;
+const uint32_t CLEAN_TO_ZERO = 24 * HOUR;
 const uint8_t  MAX_CLEAN_POINTS = 100;
 const uint8_t  CLEAN_HP_MODIFIER = 3;
 
@@ -85,12 +86,6 @@ public:
             pet.type = (_hash_str(pet_name) + pet.created_at + pet.id + owner) % PET_TYPES;
 
             r = pet;
-
-//            // testing deferred
-//            transaction out{};
-//            out.actions.emplace_back(permission_level{_self, N(active)}, N(pet), N(updatepet), std::make_tuple(pet.id, 1));
-//            out.delay_sec = 1;
-//            out.send(pet.id, _self);
         });
     }
 
@@ -99,7 +94,7 @@ public:
         print(pet_id, "|", iteration, ": updating pet ");
 
         auto itr_pet = pets.find(pet_id);
-        eosio_assert(itr_pet != pets.end(), "E404|>Invalid pet");
+        eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
         st_pets pet = *itr_pet;
 
         _update(pet);
@@ -112,23 +107,12 @@ public:
             r.happiness = pet.happiness;
             r.clean = pet.clean;
         });
-
-        // testing deferred recursive
-        // does not look a good idea... better to have
-        // a cronjob doing that for all pets maybe? :P
-//        transaction out{};
-//        out.actions.emplace_back(
-//                permission_level{_self, N(active)},
-//                N(pet), N(updatepet),
-//                std::make_tuple(pet_id, iteration+1));
-//        out.delay_sec = 60;
-//        out.send(combine_ids(pet_id, uint64_t{iteration}), _self);
     }
 
-    void feedpet(uuid pet_id, uint32_t iteration) {
+    void feedpet(uuid pet_id) {
 
         auto itr_pet = pets.find(pet_id);
-        eosio_assert(itr_pet != pets.end(), "E404|>Invalid pet");
+        eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
         st_pets pet = *itr_pet;
 
         _update(pet);
@@ -142,7 +126,7 @@ public:
             r.clean = pet.clean;
 
             uint32_t current_time = now();
-            bool can_eat = (current_time - pet.last_fed_at) > MIN_HUNGER_INTERVAL;
+            bool can_eat = (current_time - pet.last_fed_at) > MIN_HUNGER_INTERVAL && r.is_sleeping == 0;
 
             bool is_alive = r.health > 0;
 
@@ -150,16 +134,77 @@ public:
                 r.health = MAX_HEALTH;
                 r.hunger = MAX_HUNGER_POINTS;
                 r.last_fed_at = now();
+            } else if (r.is_sleeping > 0) {
+                print("I111|Zzzzzzzz...");
             } else if (!can_eat) {
-                print("I110|>Not hungry");
+                print("I110|Not hungry");
             } else if(!is_alive) {
-                print("I199|>Deads don't feed");
+                print("I199|Dead don't feed");
             }
         });
     }
 
     void bedpet(uuid pet_id) {
-        print("bed lazy developer");
+        auto itr_pet = pets.find(pet_id);
+        eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
+        st_pets pet = *itr_pet;
+
+        _update(pet);
+
+        pets.modify(itr_pet, 0, [&](auto &r) {
+            r.health = pet.health;
+            r.death_at = pet.death_at;
+            r.hunger = pet.hunger;
+            r.awake = pet.awake;
+            r.happiness = pet.happiness;
+            r.clean = pet.clean;
+
+            uint32_t current_time = now();
+            bool can_sleep = (current_time - pet.last_awake_at) > MIN_AWAKE_INTERVAL && r.is_sleeping == 0;
+
+            bool is_alive = r.health > 0;
+
+            if (can_sleep && is_alive) {
+                r.is_sleeping = 1;
+                r.last_bed_at = now();
+            } else if (!can_sleep) {
+                print("I201|Not now sir!");
+            } else if(!is_alive) {
+                print("I299|Dead don't sleep");
+            }
+        });
+    }
+
+    void awakepet(uuid pet_id) {
+        auto itr_pet = pets.find(pet_id);
+        eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
+        st_pets pet = *itr_pet;
+
+        _update(pet);
+
+        pets.modify(itr_pet, 0, [&](auto &r) {
+            r.health = pet.health;
+            r.death_at = pet.death_at;
+            r.hunger = pet.hunger;
+            r.awake = pet.awake;
+            r.happiness = pet.happiness;
+            r.clean = pet.clean;
+
+            uint32_t current_time = now();
+            bool can_awake = (current_time - pet.last_bed_at) > MIN_SLEEP_PERIOD && r.is_sleeping == 1;
+
+            bool is_alive = r.health > 0;
+
+            if (can_awake && is_alive) {
+                r.is_sleeping = 0;
+                r.last_awake_at = now();
+                r.awake = MAX_AWAKE_POINTS;
+            } else if (!can_awake) {
+                print("I301|Zzzzzzz");
+            } else if(!is_alive) {
+                print("I399|Dead don't awake");
+            }
+        });
     }
 
     void playpet(uuid pet_id) {
@@ -191,6 +236,8 @@ private:
         uint32_t last_fed_at;
         uint8_t awake = MAX_AWAKE_POINTS;
         uint32_t last_bed_at;
+        uint32_t last_awake_at = 0;
+        uint8_t is_sleeping = 1;
         uint8_t happiness = MAX_HAPPINESS_POINTS;
         uint32_t last_play_at;
         uint8_t clean = MAX_CLEAN_POINTS;
@@ -246,7 +293,7 @@ private:
 
     void _update(st_pets &pet) {
 
-        eosio_assert(pet.health > 0 && pet.death_at == 0, "E099|>Pet is dead");
+        eosio_assert(pet.health > 0 && pet.death_at == 0, "E099|Pet is dead");
 
         uint32_t current_time = now();
 
@@ -283,4 +330,4 @@ private:
 
 };
 
-EOSIO_ABI(pet, (createpet)(updatepet)(feedpet)(bedpet)(playpet)(washpet))
+EOSIO_ABI(pet, (createpet)(updatepet)(feedpet)(bedpet)(awakepet)(playpet)(washpet))

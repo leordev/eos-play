@@ -149,6 +149,8 @@ public:
         eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
         st_pets pet = *itr_pet;
 
+        require_auth(pet.owner);
+
         _update(pet);
 
         pets.modify(itr_pet, 0, [&](auto &r) {
@@ -179,6 +181,8 @@ public:
         auto itr_pet = pets.find(pet_id);
         eosio_assert(itr_pet != pets.end(), "E404|Invalid pet");
         st_pets pet = *itr_pet;
+
+        require_auth(pet.owner);
 
         _update(pet);
 
